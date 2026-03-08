@@ -1,6 +1,6 @@
-from math import log
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 #Activation Function and Derivative
 def sigmoid(x): 
@@ -88,41 +88,38 @@ def p_net(weights: list[float], biases: list[float], inp: np.ndarray):
     return a, z
 
 #TODO This is where you back propogate by calculating the deltas and updating the weights and biases, try different learning rates and see what works
-def one_epoch(training, weights, biases, LR=0.5):
-    i=0
-    input=training[i][0]
-    output, z=p_net(weights, biases, input)
-    c=MSE(output[-1], training[i][1])
-    
-    d=[(output[-1]-training[i][1])*sigmoidPrime(z[1])]
-    d.insert(0, (np.dot(np.transpose(weights[2]), d[0]))*sigmoidPrime(z[0]))
-    
-    dcdw=[]
-    dcdb=[]
-    for l in range(2):
-        dcdw.append(d[l]*np.transpose(output[l]))
-        dcdb.append(d[l])
-        
-    new_weights=[None]
-    new_biases=[None]
-    for i in [1,2]:
-        new_weights.append(weights[i]-LR*dcdw[i-1])
-        new_biases.append(biases[i]-LR*dcdb[i-1])
+def one_epoch(training, weights, biases, LR=0.1):
+    for inp, label in training:
+        output, z = p_net(weights, biases, inp)
+        L = len(weights) - 1  # number of layers
 
-    return new_weights, new_biases
+        d = [None] * (L + 1)
+        d[L] = (output[-1] - label) * sigmoidPrime(z[-1])
+        for l in range(L - 1, 0, -1):
+            d[l] = np.dot(weights[l + 1].T, d[l + 1]) * sigmoidPrime(z[l - 1])
+
+        # Update weights and biases
+        for l in range(1, L + 1):
+            weights[l] -= LR * np.dot(d[l], output[l - 1].T)
+            biases[l]  -= LR * d[l]
+
+    return weights, biases
 
 #TODO Run your model over some number of epochs should be at least 10 and display a graph that shows train and test accuracy on each Epoch
 if __name__ == "__main__":
     training = read_file("mnist_train.csv")
     testing = read_file("mnist_test.csv")
-    weights, biases = architecture([784, 30, 10])
-
-    epochs=50
+    weights, biases = architecture([784, 400, 200, 10])
+    
+    epochs=10
     train_accs=[]
     test_accs=[]
+    LR=0.5
+    
+    print(f"====== epochs: {epochs} | learning rate: {LR} ======")
     
     for epoch in range(epochs):
-        weights, biases = one_epoch(training, weights, biases, 0.01)
+        weights, biases = one_epoch(training, weights, biases, LR)
         
         train_acc = eval(training, weights, biases)
         test_acc = eval(testing, weights, biases)
