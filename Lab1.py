@@ -1,10 +1,10 @@
 from math import log
 import numpy as np
+import matplotlib.pyplot as plt
 
 #Activation Function and Derivative
 def sigmoid(x): return 1 / (1 + np.e**(-1*x))
 def sigmoidPrime(x): return np.e**(-1*x) / ((1 + np.e**(-1*x))**2) 
-
 
 #Some useful comversion functions
 def ListtoVector(new_list):
@@ -43,7 +43,9 @@ def read_file(file_name):
         for line in f:
             image = line[0:len(line)-1].split(",")
             output = image.pop(0)
-            in_vec = ListtoVector(image)
+            #Normalize output to between 0 and 1 or else the model does not learn well
+            normalized_pixels = [int(p) / 255 for p in image]
+            in_vec = ListtoVector(normalized_pixels)
             out_vec = list()
             for c in range(10):
                 if c == int(output):
@@ -57,16 +59,84 @@ def read_file(file_name):
 
 #TODO A feed forward of the network where A_vec is the activation function, weights is a list of all the weight matrices, biases is a list of all the bias vectors, and inp is the input, return the output as a vector
 def p_net(A_vec, weights, biases, inp):
-    return None
+    #Initialize inputs
+    activate = inp
+
+    #Feed foward through the network using z = wx + b and applying acvitation function A_vec
+    for i in range(1, len(weights)):
+        z = np.dot(weights[i], activate) + biases[i]
+        activate = A_vec(z)
+        
+    return activate
 
 #TODO This is where you back propogate by calculating the deltas and updating the weights and biases, try different learning rates and see what works
 def one_epoch(training, weights, biases):
+    learning_rate = 0.15
+    
+    for x, y in training:
+        #Foward pass
+        activations = [x] 
+        zvalues = []
+        for i in range(1, len(weights)):
+            z = np.dot(weights[i], activations[-1]) + biases[i]
+            zvalues.append(z)
+            activations.append(sigmoid(z))
+        
+        #Backpropgation with deltas
+        deltas = {}
+        L = len(weights) - 1
+        
+        #Last layer error
+        deltas[L] = (activations[-1] - y) * sigmoidPrime(zvalues[-1])
+
+        #Hidden layer deltas
+        for l in range(L - 1, 0, -1):
+            deltas[l] = np.dot(weights[l+1].T, deltas[l+1]) * sigmoidPrime(zvalues[l-1])
+
+        #Updating weights and biases
+        for l in range(1, len(weights)):
+            weights[l] -= learning_rate * np.dot(deltas[l], activations[l-1].T)
+            biases[l] -= learning_rate * deltas[l]
+    
     return weights, biases
 
 #TODO Run your model over some number of epochs should be at least 10 and display a graph that shows train and test accuracy on each Epoch
+def train_and_evaluate(training_data, test_data, weights, biases, epochs=10):
+    train_accs = []
+    test_accs = []
 
+    for e in range(epochs):
+        #Update weights and biases for each epoch using training data
+        weights, biases = one_epoch(training_data, weights, biases)
+        
+        #Check performance on training data
+        train_hits = sum(int(np.argmax(p_net(sigmoid, weights, biases, x)) == np.argmax(y)) for x, y in training_data)
+        train_accs.append(train_hits / len(training_data))
+        
+        #Check performance on test data
+        test_hits = sum(int(np.argmax(p_net(sigmoid, weights, biases, x)) == np.argmax(y)) for x, y in test_data)
+        test_accs.append(test_hits / len(test_data))
+        
+        print(f"Epoch {e+1} | Train: {train_accs[-1]:.2%} | Test: {test_accs[-1]:.2%}")
 
+    #Plot 
+    plt.plot(train_accs, label="Training Accuracy", color='blue')
+    plt.plot(test_accs, label="Testing Accuracy", color='red')
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.show()
 
+def main():
+    print("Reading and loading data.")
+    training_data = read_file("mnist_train.csv")
+    test_data = read_file("mnist_test.csv")
 
+    layers = [784, 45, 15, 10]
+    weights, biases = architecture(layers)
 
+    print("Starting training and testing.")
+    train_and_evaluate(training_data, test_data, weights, biases, epochs = 20)
 
+if __name__ == "__main__":
+    main()
