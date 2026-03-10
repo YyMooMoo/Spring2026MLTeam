@@ -1,6 +1,7 @@
 from math import log
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 #Activation Function and Derivative
 def sigmoid(x):
@@ -99,7 +100,10 @@ def networkFull(epoch, alpha):
     test = read_file('mnist_test.csv')
     nodes = [784, 400, 200, 10]
     weights, biases = architecture(nodes)
-    
+
+    accarr = []
+    epocharr = []
+
     for k in range(epoch):
         random.shuffle(data)
         for i in range(len(data)):
@@ -108,14 +112,23 @@ def networkFull(epoch, alpha):
             
 
             a, caches = p_net(sigmoid, weights, biases, x)
-
             training = a, caches, y, alpha
-
             weights, biases = one_epoch(training, weights, biases)
+            
+        corr = 0
+        for j in range(len(data)):
+            x = data[j][0]/255
+            y = data[j][1]
+            prediction, _ = p_net(sigmoid, weights, biases, x)
+            if (np.argmax(prediction) == np.argmax(y)):
+                corr = corr+1
+        acc = corr/len(data)
+        accarr.append(acc)
+        epocharr.append(k)
 
 
     correct = 0
-
+    
     for m in range(len(test)):
         x = test[m][0]/255
         y = test[m][1]
@@ -123,12 +136,20 @@ def networkFull(epoch, alpha):
 
         prediction, _ = p_net(sigmoid, weights, biases, x)
 
+        
+        
+
         if (np.argmax(prediction) == np.argmax(y)):
             correct = correct+1
 
     accuracy = correct/len(test)
 
-    print(accuracy)
+    print("Final test accuracy: ", accuracy)
+    plt.plot(epocharr, accarr)
+    plt.xlabel("Epoch Iteration")
+    plt.ylabel("Accuracy")
+    plt.title("Accuracy over Epochs on Training")
+    plt.show()
 
 networkFull(10, 0.05)
 
