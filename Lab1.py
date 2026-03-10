@@ -1,7 +1,6 @@
 from math import log
 import numpy as np
-
-
+import matplotlib.pyplot as plt
 #Activation Function and Derivative
 def sigmoid(x): return 1 / (1 + np.e**(-1*x))
 def sigmoidPrime(x): return np.e**(-1*x) / ((1 + np.e**(-1*x))**2) 
@@ -58,16 +57,78 @@ def read_file(file_name):
 
 #TODO A feed forward of the network where A_vec is the activation function, weights is a list of all the weight matrices, biases is a list of all the bias vectors, and inp is the input, return the output as a vector
 def p_net(A_vec, weights, biases, inp):
-    return None
-
+    a = inp
+    for l in range(1,len(weights)):
+        W = weights[l]
+        b = biases[l]
+        z = W @ a + b
+        a = A_vec(z)
+    return a
 #TODO This is where you back propogate by calculating the deltas and updating the weights and biases, try different learning rates and see what works
 def one_epoch(training, weights, biases):
+    for (inp,y) in training:
+        #feed forward 
+        zs = []
+        activations = [inp]
+        a = inp.astype(float)
+        for l in range(1,len(weights)):
+            z = weights[l] @ a + biases[l]
+            a = sigmoid(z)
+            zs.append(z)
+            activations.append(a)
+            
+        delta = (activations[-1]-y)*sigmoidPrime(zs[-1]) # for output layer.
+        
+        for l in range(len(weights)-1,0,-1):
+            dW = delta @ activations[l-1].T
+            dB = delta
+            
+            weights[l] -= 0.1 * dW #0.1 is the learning rate here
+            biases[l] -= 0.1 * dB
+            if l > 1: #for hidden layers
+                delta = (weights[l].T @ delta) * sigmoidPrime(zs[l-2])
+    
     return weights, biases
+
+def compute_loss(data, weights, biases): # calculates the average loss, comparing given data to our feed forward predicted values.
+    total_loss = 0
+    for (inp, y) in data:
+        output = p_net(sigmoid, weights, biases, inp.astype(float))
+        total_loss += np.sum((output - y) ** 2)
+    return total_loss / len(data)
 
 #TODO Run your model over some number of epochs should be at least 10 and display a graph that shows train and test accuracy on each Epoch
 
+def train(training, testing, weights, biases,epochs = 10):
+    trainLoss = []
+    testLoss = []
+    for epoch in range(epochs):
+        np.random.shuffle(training)
+        weights,biases = one_epoch(training,weights,biases)
+        
+        tr = compute_loss(training,weights,biases)
+        te = compute_loss(testing,weights,biases)
+        trainLoss.append(tr)
+        testLoss.append(te)
+        
+        
+    plt.plot(range(1, epochs+1), trainLoss, label="Train Loss")
+    plt.plot(range(1, epochs+1), testLoss,  label="Test Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("MSE Loss")
+    plt.title("Train vs Test Loss")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
+    return weights, biases
 
+training = read_file("./Spring2026MLTeam/mnist_train.csv")
+testing  = read_file("./Spring2026MLTeam/mnist_test.csv")
+
+weights, biases = architecture([784, 128, 64, 10])
+weights, biases = train(training, testing, weights, biases, epochs=10)
 
 
 
