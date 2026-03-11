@@ -57,13 +57,88 @@ def read_file(file_name):
 
 #TODO A feed forward of the network where A_vec is the activation function, weights is a list of all the weight matrices, biases is a list of all the bias vectors, and inp is the input, return the output as a vector
 def p_net(A_vec, weights, biases, inp):
-    return None
+    activation = inp
+
+    for layer in range(1, len(weights)):
+        z = np.matmul(weights[layer], activation) + biases[layer]
+        activation = A_vec(z)
+
+    return activation
 
 #TODO This is where you back propogate by calculating the deltas and updating the weights and biases, try different learning rates and see what works
 def one_epoch(training, weights, biases):
+    learning_rate = 0.1
+
+    for inp, expected in training:
+        inp = inp.astype(float) / 255.0
+        expected = expected.astype(float)
+        activations = [inp]
+        z_values = [None]
+        activation = inp
+        
+        # forward pass
+        for layer in range(1, len(weights)):
+            z = np.matmul(weights[layer], activation) + biases[layer]
+            z_values.append(z)
+            activation = sigmoid(z)
+            activations.append(activation)
+
+        deltas = [None] * len(weights)
+
+        # output layer change
+        deltas[-1] = (activations[-1] - expected) * sigmoidPrime(z_values[-1])
+
+        # hidden layer changes
+        for layer in range(len(weights) - 2, 0, -1):
+            deltas[layer] = np.matmul(weights[layer + 1].T, deltas[layer + 1]) * sigmoidPrime(z_values[layer])
+
+        # gradient descent update
+        for layer in range(1, len(weights)):
+            weights[layer] = weights[layer] - learning_rate * np.matmul(deltas[layer], activations[layer - 1].T)
+            biases[layer] = biases[layer] - learning_rate * deltas[layer]
+
     return weights, biases
 
 #TODO Run your model over some number of epochs should be at least 10 and display a graph that shows train and test accuracy on each Epoch
+import matplotlib.pyplot as plt
+
+def get_accuracy(data, weights, biases):
+    correct = 0
+
+    for inp, expected in data:
+        inp = inp.astype(float)/255.0
+        output = p_net(sigmoid, weights, biases, inp)
+        predicted_label = np.argmax(output)
+        actual_label = np.argmax(expected)
+        if predicted_label == actual_label:
+            correct += 1
+    return correct/len(data)
+
+weights, biases = architecture([784, 64, 32, 10])
+
+training_data = read_file("mnist_train.csv")
+test_data = read_file("mnist_test.csv")
+
+epochs = 10
+train_accs = []
+test_accs = []
+
+for epoch in range(epochs):
+    weights, biases = one_epoch(training_data, weights, biases)
+    train_accuracy = get_accuracy(training_data, weights, biases)
+    test_accuracy = get_accuracy(test_data, weights, biases)
+    train_accs.append(train_accuracy)
+    test_accs.append(test_accuracy)
+    print("Epoch", epoch + 1, "Train Accuracy:", train_accuracy, "Test Accuracy:", test_accuracy)
+
+plt.plot(range(1, epochs + 1), train_accs, label="Train Accuracy")
+plt.plot(range(1, epochs + 1), test_accs, label="Test Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.title("Training and Test Accuracy")
+plt.legend()
+plt.show()
+
 
 
 
