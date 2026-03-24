@@ -25,7 +25,8 @@ MOMENTUM      = 0.9
 BATCH_SIZE    = 32
 EPOCHS        = 10
 
-DATA_DIR     = '../data'
+SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR     = os.path.join(SCRIPT_DIR, '../data')
 RESULTS_FILE = 'results/cnn_results.csv'
 
 
