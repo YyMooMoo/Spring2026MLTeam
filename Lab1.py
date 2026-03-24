@@ -9,7 +9,6 @@ def sigmoid(x):
 def sigmoidPrime(x): 
     return np.exp(-x) / ((1 + np.exp(-x))**2)
 
-
 #Some useful comversion functions
 def ListtoVector(new_list):
     length = len(new_list)
@@ -142,7 +141,24 @@ if __name__ == "__main__":
     plt.show()
     
 
+    #Plot 
+    plt.plot(train_accs, label="Training Accuracy", color='blue')
+    plt.plot(test_accs, label="Testing Accuracy", color='red')
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.show()
 
+def main():
+    print("Reading and loading data.")
+    training_data = read_file("mnist_train.csv")
+    test_data = read_file("mnist_test.csv")
 
+    layers = [784, 45, 15, 10]
+    weights, biases = architecture(layers)
 
+    print("Starting training and testing.")
+    train_and_evaluate(training_data, test_data, weights, biases, epochs = 20)
 
+if __name__ == "__main__":
+    main()
