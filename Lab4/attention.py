@@ -17,7 +17,7 @@ def scaled_dot_product_attention(Q, K, V, mask): #Input is the Query, Key, and V
     #There should be two outputs. #1 is output which what you would add to each embedding. #2 is the weights which is the weights AFTER softmax but before multiplying by V
     return output, weights
 
-
+#Put all the token outputs into a sentence
 def sentence_representation(attention_output):
     return attention_output.mean(axis=0)
 
