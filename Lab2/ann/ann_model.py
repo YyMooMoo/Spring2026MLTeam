@@ -38,6 +38,19 @@ def softmax(x):
 # =============================================================================
 
 def cross_entropy_loss(y_pred, y_true):
+    """
+    Cross-entropy loss and its gradient w.r.t. the softmax input.
+
+    Parameters
+    ----------
+    y_pred : np.ndarray, shape (N, 10) — softmax probabilities
+    y_true : np.ndarray, shape (N,)    — integer class labels 0-9
+
+    Returns
+    -------
+    loss : float
+    grad : np.ndarray, shape (N, 10)
+    """
     N              = y_pred.shape[0]
     y_pred_clipped = np.clip(y_pred, 1e-12, 1.0)
     loss           = -np.sum(np.log(y_pred_clipped[np.arange(N), y_true])) / N
@@ -52,6 +65,12 @@ def cross_entropy_loss(y_pred, y_true):
 # =============================================================================
 
 class FCLayer:
+    """
+    Fully-connected layer: out = x @ W + b
+
+    Weights are He-initialised. Momentum velocity terms are tracked
+    internally and updated each call to update().
+    """
 
     def __init__(self, in_features, out_features):
         self.in_features  = in_features
