@@ -1,4 +1,5 @@
 Vedant Yadav
+
 Lab 4 - Attention Mechanism Worksheet
 
 1. What does the softmax function do in attention?
@@ -15,14 +16,3 @@ Scaling by sqrt(d_k) prevents the dot products from becoming too large, which wo
 
 5. How does attention help with the vanishing gradient problem?
 Attention creates direct connections between distant tokens, allowing gradients to flow directly without passing through many intermediate layers.
-
-6. Describe the attention mechanism formula.
-Attention(Q, K, V) = softmax(QK^T / sqrt(d_k))V
-
-7. What is the purpose of multi-head attention?
-Multi-head attention allows the model to attend to different types of information simultaneously by using multiple attention heads in parallel.
-
-8. How does self-attention differ from cross-attention?
-Self-attention computes attention within the same sequence, while cross-attention computes attention between different sequences (e.g., encoder-decoder).
-
-Submitted: March 31, 2026
