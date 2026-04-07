@@ -1,2 +1,5 @@
 # Instructor files
 *ANSWER_KEY*
+.DS_Store
+__pycache__/
+.venv
