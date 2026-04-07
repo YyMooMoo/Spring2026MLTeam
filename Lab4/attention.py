@@ -1,20 +1,35 @@
 import numpy as np
+import numpy.ma as ma
 import matplotlib.pyplot as plt
 
 #TODO Softmax, Make_Causal_Mask, Scaled_dot_product_attention
 
 
 def softmax(x, axis=-1): #Input is a numpy matrix like [[1 2 3] [4 5 6]]. Over the axis you need to perform softmax on the values and return the resulting arrays where the values add up to 1.
-    return x
+    e_x = np.exp(x - np.max(x, axis=axis, keepdims=True))
+    return e_x / e_x.sum(axis=axis, keepdims=True)
 
 
 def make_causal_mask(seq_len): #Input is a positive integer, 
     #Output should be a nxn array of booleans where n = seq_len. The values should be True if the position should be masked out and should be False if the position should not be masked out.
-    return np.zeros((seq_len, seq_len))
+    mask = np.zeros((seq_len,seq_len))
+    for row in range(seq_len):
+        for x in range(row+1,seq_len):
+            mask[row][x] = 1
+        
+    bool_arr = mask>0
+    return bool_arr
 
 
 def scaled_dot_product_attention(Q, K, V, mask): #Input is the Query, Key, and Value matrices and mask which if None means no masking otherwise means yes masking. 
     #There should be two outputs. #1 is output which what you would add to each embedding. #2 is the weights which is the weights AFTER softmax but before multiplying by V
+    dot_product = Q @ K.T
+    if mask is not None:
+        dot_product = np.where(mask, -np.inf, dot_product)
+    
+    weights = softmax(dot_product)
+    output = weights @ V
+    
     return output, weights
 
 #Put all the token outputs into a sentence
