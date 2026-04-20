@@ -36,10 +36,9 @@ def choose_action(state, Q, epsilon):
         np.argmax(Q[state])                   → index of max value
         np.random.randint(0, GridWorld.NACTIONS) → random action
     """
-    # TODO
-    # With probability epsilon: return a random action
-    # Otherwise:                return argmax Q[state]
-    pass
+    if np.random.random() < epsilon:
+        return np.random.randint(0, GridWorld.NACTIONS)
+    return int(np.argmax(Q[state]))
 
 
 def update_Q_learning(Q, state, action, reward, next_state, alpha, gamma):
@@ -63,11 +62,9 @@ def update_Q_learning(Q, state, action, reward, next_state, alpha, gamma):
     Hints:
         np.max(Q[next_state])  → best Q-value available from next_state
     """
-    # TODO
-    td_target = None   # reward + gamma * max Q[next_state]
-    td_error  = None   # td_target - Q[state, action]
-    # Q[state, action] += alpha * td_error
-    pass
+    td_target = reward + gamma * np.max(Q[next_state])
+    td_error  = td_target - Q[state, action]
+    Q[state, action] += alpha * td_error
 
 
 def update_SARSA(Q, state, action, reward, next_state, next_action, alpha, gamma):
@@ -93,11 +90,9 @@ def update_SARSA(Q, state, action, reward, next_state, next_action, alpha, gamma
         alpha       (float)
         gamma       (float)
     """
-    # TODO
-    td_target = None   # reward + gamma * Q[next_state, next_action]
-    td_error  = None
-    # Q[state, action] += alpha * td_error
-    pass
+    td_target = reward + gamma * Q[next_state, next_action]
+    td_error  = td_target - Q[state, action]
+    Q[state, action] += alpha * td_error
 
 
 def train(
@@ -166,9 +161,10 @@ def train(
         epsilon_log.append(epsilon)  # record epsilon at episode start
 
         # ── SARSA: choose the very first action before entering the loop ──
-        # TODO: if algorithm == "sarsa", call choose_action here and store
-        #       the result in `action`. For q-learning, set action = None.
-        action = None  # replace this line
+        if algorithm == "sarsa":
+            action = choose_action(state, Q, epsilon)
+        else:
+            action = None
 
         while not done:
 
@@ -178,7 +174,11 @@ def train(
                 # 3. Call update_Q_learning(...)
                 # 4. state = next_state
                 # 5. total_reward += reward
-                pass
+                action = choose_action(state, Q, epsilon)
+                next_state, reward, done = env.step(action)
+                update_Q_learning(Q, state, action, reward, next_state, alpha, gamma)
+                state = next_state
+                total_reward += reward
 
             elif algorithm == "sarsa":
                 # 1. Take the current action: next_state, reward, done = env.step(action)
@@ -188,12 +188,20 @@ def train(
                 # 4. action = next_action   (carry forward for next iteration)
                 # 5. state = next_state
                 # 6. total_reward += reward
-                pass
+                next_state, reward, done = env.step(action)
+                if done:
+                    next_action = 0
+                else:
+                    next_action = choose_action(next_state, Q, epsilon)
+                update_SARSA(
+                    Q, state, action, reward, next_state, next_action, alpha, gamma
+                )
+                action = next_action
+                state = next_state
+                total_reward += reward
 
         rewards_log.append(total_reward)
 
-        # TODO: apply epsilon decay after each episode
-        # epsilon = max(epsilon_end, epsilon * epsilon_decay)
-        pass
+        epsilon = max(epsilon_end, epsilon * epsilon_decay)
 
     return Q, rewards_log, epsilon_log

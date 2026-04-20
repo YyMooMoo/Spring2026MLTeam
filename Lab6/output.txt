@@ -1,0 +1,42 @@
+=======================================================
+Part C — Epsilon decay experiment
+=======================================================
+Fixed 0.1  | final 50-ep avg: 9.44
+Fixed 0.5  | final 50-ep avg: 1.60
+Decaying   | final 50-ep avg: 9.47
+=======================================================
+Part D — Q-learning vs SARSA
+=======================================================
+
+Q-learning Policy:
+v  v  <  v  
+v  v  H  v  
+>  >  >  v  
+>  >  >  G  
+
+
+SARSA Policy:
+v  <  >  v  
+v  v  H  v  
+v  v  v  v  
+>  >  >  G  
+
+State  2 (above the hole) | Q-learning max:   2.39 | SARSA max:  -0.08
+State  5 (left of the hole) | Q-learning max:   7.02 | SARSA max:   3.86
+State  7 (right of the hole) | Q-learning max:   8.60 | SARSA max:   3.28
+State 10 (below the hole) | Q-learning max:   8.90 | SARSA max:   8.38
+Q-learning | final 50-ep avg: 9.46
+SARSA      | final 50-ep avg: 9.45
+=======================================================
+Part E — Visualization
+=======================================================
+Training final agent for visualization...
+
+Greedy episode replay:
+Step  1 | State:  0 (row 0, col 0) | Action: DOWN  | Reward: -0.1
+Step  2 | State:  4 (row 1, col 0) | Action: DOWN  | Reward: -0.1
+Step  3 | State:  8 (row 2, col 0) | Action: DOWN  | Reward: -0.1
+Step  4 | State: 12 (row 3, col 0) | Action: RIGHT | Reward: -0.1
+Step  5 | State: 13 (row 3, col 1) | Action: RIGHT | Reward: -0.1
+Step  6 | State: 14 (row 3, col 2) | Action: RIGHT | Reward: 10.0
+Episode finished in 6 steps. Total reward: 9.50. Reached goal: True
