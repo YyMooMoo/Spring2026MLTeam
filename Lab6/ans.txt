@@ -1,0 +1,11 @@
+Heatmap interpretation. Highest values concentrate at the bottom row and state 10 (right below the goal, V ≈ 8.9–10.0). Lowest non-terminal values sit at row 0, especially state 3 (V ≈ 0.4) — it's boxed in next to the hole and the optimal policy avoids it, so Q-learning rarely updates those state-action pairs late in training. This matches intuition: value radiates outward from the +10 sink along the optimal-path gradient.
+
+
+SARSA timing. If you chose next_action after the update, you'd bootstrap with some other action's Q-value (e.g., max_a'), which would silently turn SARSA into Q-learning. You'd lose the on-policy property entirely and your hole-avoidance behavior would disappear.
+
+
+Why not pure greedy at convergence? A small floor like ε = 0.01 preserves tail coverage for (a) states the current policy under-visited — if early updates were unlucky, some better action might be stuck below an artificially-boosted one, and without exploration you can't ever correct it; (b) any non-stationarity in the environment. ε = 0 makes learning irreversible in the wrong direction.
+
+
+8×8 scaling. Q-table doubles and then some (256 entries vs 64), but that's not the real bottleneck — reward propagation distance is. The agent needs to random-walk all the way to the goal before any positive reward enters the Q-table, and under ε-greedy this is roughly a random walk, so expected time to first reward grows super-linearly with grid size. You'd need significantly more episodes (or reward shaping, or optimistic initialization) to compensate.
+
