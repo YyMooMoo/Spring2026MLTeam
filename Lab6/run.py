@@ -60,7 +60,33 @@ def experiment_epsilon_decay():
         - Print the final 50-episode average reward for each agent:
               print(f"Fixed 0.1  | final 50-ep avg: {np.mean(rewards[-50:]):.2f}")
     """
-    pass
+    Q1, r1, _ = train(algorithm="qlearning", episodes=600, epsilon_start=0.1, epsilon_end=0.1, epsilon_decay=1.0)
+    Q2, r2, _ = train(algorithm="qlearning", episodes=600, epsilon_start=0.5, epsilon_end=0.5, epsilon_decay=1.0)
+    Q3, r3, e3 = train(algorithm="qlearning", episodes=600, epsilon_start=1.0, epsilon_end=0.01, epsilon_decay=0.995)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+
+    ax1.plot(smooth(r1), label="Fixed ε=0.1")
+    ax1.plot(smooth(r2), label="Fixed ε=0.5")
+    ax1.plot(smooth(r3), label="Decaying ε")
+    ax1.axhline(0, color="black", linestyle="--", linewidth=0.8)
+    ax1.legend()
+    ax1.set_xlabel("Episode")
+    ax1.set_ylabel("Smoothed reward")
+    ax1.set_title("Epsilon schedule comparison")
+
+    ax2.plot(e3)
+    ax2.set_xlabel("Episode")
+    ax2.set_ylabel("Epsilon")
+    ax2.set_title("Decaying epsilon schedule")
+
+    plt.tight_layout()
+    plt.savefig("epsilon_experiment.png")
+    plt.show()
+
+    print(f"Fixed 0.1  | final 50-ep avg: {np.mean(r1[-50:]):.2f}")
+    print(f"Fixed 0.5  | final 50-ep avg: {np.mean(r2[-50:]):.2f}")
+    print(f"Decaying   | final 50-ep avg: {np.mean(r3[-50:]):.2f}")
 
 
 
@@ -89,7 +115,37 @@ def experiment_algorithms():
     In a comment at the bottom of this function, answer:
         Which algorithm has lower Q-values near the hole, and why?
     """
-    pass
+    kwargs = dict(episodes=600, alpha=0.1, gamma=0.9, epsilon_start=1.0, epsilon_end=0.05, epsilon_decay=0.995)
+    Q_ql, r_ql, _ = train(algorithm="qlearning", **kwargs)
+    Q_sa, r_sa, _ = train(algorithm="sarsa",     **kwargs)
+
+    plt.figure(figsize=(8, 4))
+    plt.plot(smooth(r_ql), label="Q-learning")
+    plt.plot(smooth(r_sa), label="SARSA")
+    plt.axhline(0, color="black", linestyle="--", linewidth=0.8)
+    plt.legend()
+    plt.xlabel("Episode")
+    plt.ylabel("Smoothed reward")
+    plt.title("Q-learning vs SARSA")
+    plt.tight_layout()
+    plt.savefig("algorithm_comparison.png")
+    plt.show()
+
+    print_policy(Q_ql, label="Q-learning Policy")
+    print_policy(Q_sa, label="SARSA Policy")
+
+    hole_neighbors = [(2, "above hole"), (5, "left of hole"), (7, "right of hole"), (10, "below hole")]
+    print("Q-values near the hole:")
+    for s, label in hole_neighbors:
+        print(f"  State {s:2d} ({label:15s}) | Q-learning max: {np.max(Q_ql[s]):.3f} | SARSA max: {np.max(Q_sa[s]):.3f}")
+
+    print(f"\nQ-learning | final 50-ep avg: {np.mean(r_ql[-50:]):.2f}")
+    print(f"SARSA      | final 50-ep avg: {np.mean(r_sa[-50:]):.2f}")
+
+    # SARSA has lower Q-values near the hole because it is on-policy: it learns
+    # from the exploratory actions it actually takes, which sometimes steer into
+    # the hole, dragging down values for adjacent states. Q-learning always
+    # bootstraps with max Q (off-policy), so it stays more optimistic near danger.
 
 
 
@@ -122,7 +178,33 @@ def plot_value_heatmap(Q, title="State value function V*(s)"):
         - Save as "value_heatmap.png"
         - plt.show()
     """
-    pass
+    V = np.array([np.max(Q[s]) for s in range(GridWorld.NSTATES)])
+    V_grid = V.reshape(4, 4)
+
+    _, ax = plt.subplots(figsize=(5, 5))
+    im = ax.imshow(V_grid, cmap="RdYlGn", interpolation="nearest")
+    plt.colorbar(im, ax=ax)
+
+    for row in range(4):
+        for col in range(4):
+            s = row * 4 + col
+            val = V_grid[row, col]
+            if s == GridWorld.GOAL:
+                text = "G"
+            elif s == GridWorld.HOLE:
+                text = "H"
+            else:
+                text = f"{val:.1f}"
+            ax.text(col, row, text, ha="center", va="center", fontsize=12, fontweight="bold")
+
+    ax.set_xticks(range(4))
+    ax.set_yticks(range(4))
+    ax.set_xticklabels([f"col {c}" for c in range(4)])
+    ax.set_yticklabels([f"row {r}" for r in range(4)])
+    ax.set_title(title)
+    plt.tight_layout()
+    plt.savefig("value_heatmap.png")
+    plt.show()
 
 
 
@@ -152,7 +234,23 @@ def replay_episode(Q, epsilon=0.0, max_steps=50):
         - Track: step count, total_reward, whether goal was reached
           (goal reached = final state == GridWorld.GOAL)
     """
-    pass
+    env = GridWorld()
+    state = env.reset()
+    total_reward = 0.0
+    done = False
+    step = 0
+
+    while not done and step < max_steps:
+        action = choose_action(state, Q, epsilon)
+        row, col = env.state_to_coords(state)
+        next_state, reward, done = env.step(action)
+        step += 1
+        total_reward += reward
+        print(f"Step {step:2d} | State: {state:2d} (row {row}, col {col}) | Action: {GridWorld.ACTION_NAMES[action]:<5} | Reward: {reward}")
+        state = next_state
+
+    reached_goal = state == GridWorld.GOAL
+    print(f"Episode finished in {step} steps. Total reward: {total_reward:.2f}. Reached goal: {reached_goal}")
 
 
 
