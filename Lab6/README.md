@@ -1,23 +1,5 @@
 # Lab: Q-Learning and SARSA on GridWorld
 
-Intro Reinforcement Learning · Python 3 · Estimated time: 2.5 hours
-
----
-
-## File guide — what to modify and what not to
-
-```
-rl_lab/
-├── gridworld.py        ← DO NOT MODIFY. The environment.
-├── agent.py            ← MODIFY. Your algorithm implementations.
-├── run.py              ← MODIFY. Your experiments and visualizations.
-├── README.md           ← This file.
-│
-│   (instructor only — do not distribute)
-├── agent_solution.py
-└── run_solution.py
-```
-
 ### gridworld.py — read only
 
 This file contains the `GridWorld` class. It is a complete, working
@@ -52,7 +34,7 @@ Functions you will implement:
 
 ---
 
-## Setup
+## Setup (only do this if you don't already have the requirements)
 
 You need Python 3 with NumPy and Matplotlib. No other libraries.
 
