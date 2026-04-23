@@ -106,9 +106,6 @@ class FCLayer:
 # =============================================================================
 
 class ANN:
-    """
-    784 -> FC1(256) -> ReLU -> FC2(128) -> ReLU -> FC3(10) -> Softmax
-    """
 
     def __init__(self):
         self.fc1 = FCLayer(784, 256)
@@ -119,15 +116,6 @@ class ANN:
         self.relu2_input = None
 
     def forward(self, x):
-        """
-        Parameters
-        ----------
-        x : np.ndarray, shape (N, 784)
-
-        Returns
-        -------
-        probs : np.ndarray, shape (N, 10)
-        """
         x = self.fc1.forward(x)
         self.relu1_input = x
         x = relu(x)
@@ -140,11 +128,6 @@ class ANN:
         return softmax(x)
 
     def backward(self, grad):
-        """
-        Parameters
-        ----------
-        grad : np.ndarray, shape (N, 10) — gradient from cross_entropy_loss
-        """
         grad = self.fc3.backward(grad)
         grad = relu_backward(grad, self.relu2_input)
         grad = self.fc2.backward(grad)
